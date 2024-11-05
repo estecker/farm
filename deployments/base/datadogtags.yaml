@@ -1,0 +1,16 @@
+# https://github.com/kubernetes-sigs/kustomize/blob/master/examples/configureBuiltinPlugin.md
+# Only do annotation on deployment rather than all objects
+# transformers:
+#  - datadogtags.yaml
+#$ envsubst < datadogtags.yaml or  sed -e "s/\${COMMIT_SHA}/${COMMIT_SHA}/" datadogtags.yaml
+
+apiVersion: builtin
+kind: AnnotationsTransformer
+metadata:
+  name: datadogtags
+fieldSpecs:
+- kind: Deployment
+  path: spec/template/metadata/annotations
+  create: true
+annotations:
+  ad.datadoghq.com/tags: '{"git.commit.sha": "${COMMIT_SHA}", "git.repository_url": "github.com/estecker/farm"}'

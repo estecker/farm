@@ -1,0 +1,43 @@
+selectorLabels:
+  app: farm
+  role: worker
+
+replicaCount: 1
+
+image:
+  branch: staging
+  repository: europe-west4-docker.pkg.dev/prj-estecker/docker-europe-west4/farm
+  tag: latest
+
+resources:
+  limits:
+    cpu: "200m"
+    memory: "1024Mi"
+  requests:
+    cpu: "200m"
+    memory: "1024Mi"
+
+serviceAccount:
+  enabled: false
+  names: |
+    k8s_account:
+    gcp_account:
+  rules:
+  - apiGroups:
+    - "*"
+    resources:
+    - "*"
+    verbs:
+    - "*"
+
+datadogService: farm
+
+datadogEnvironment:
+
+argo:
+  enabled: false
+  namespace:
+
+airflow:
+  enabled: false
+  host:
