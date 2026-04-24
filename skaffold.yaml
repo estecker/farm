@@ -1,0 +1,40 @@
+# https://cloud.google.com/deploy/docs/using-skaffold/select-skaffold
+# go test -v ./...
+# SKAFFOLD_DEFAULT_REPO=europe-west4-docker.pkg.dev/prj-lab-estecker/docker-europe-west4 skaffold run --profile=eddie-stg
+# export FARM_AIRFLOW=true FARM_ARGO=false;go run ./cmd/farm/
+
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: farm
+build:
+  tagPolicy:
+    dateTime:
+      format: "2006-01-02T150405"
+      timezone: "UTC"
+
+  artifacts:
+    - image:  europe-west4-docker.pkg.dev/prj-estecker/docker-europe-west4/farm
+      context: .
+      ko:
+        dir: .
+        labels:
+          org.opencontainers.image.revision: "{{.GITHUB_SHA}}"
+          org.opencontainers.image.source: "{{.GITHUB_SERVER_URL}}/{{.GITHUB_REPOSITORY}}"
+          org.opencontainers.image.created: "{{.BUILDDATE}}"
+          org.opencontainers.image.title: "farm"
+          org.opencontainers.image.description: "farm"
+          org.opencontainers.image.url: "{{.GITHUB_SERVER_URL}}/{{.GITHUB_REPOSITORY}}"
+        env:
+          - CGO_ENABLED=0
+        main: ./cmd/farm
+manifests:
+  kustomize:
+    paths:
+      - deployments/base
+profiles:
+  - name: eddie-stg
+    manifests:
+      kustomize:
+        paths:
+          -  deployments/overlays/tenants/eddie/stg

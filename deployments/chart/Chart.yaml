@@ -1,0 +1,7 @@
+apiVersion: v2
+name: farm
+description: Helm chart deploying farm to Kubernetes
+type: application
+version: "2024.6.13"
+appVersion: "2024.6.13"
+icon: https://kubernetes.io/images/favicon.png

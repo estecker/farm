@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: farm
+    tags.datadoghq.com/env: base
+  name: farm
+  namespace: default
+spec:
+  progressDeadlineSeconds: 900
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: farm
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        ad.datadoghq.com/tags: '{"git.repository_url": "github.com/estecker/farm"}'
+        admission.datadoghq.com/enabled: "true"
+      labels:
+        app: farm
+        admission.datadoghq.com/enabled: "true"
+        tags.datadoghq.com/service: farm
+        tags.datadoghq.com/env: base
+    spec:
+      containers:
+        - env:
+            - name: FARM_ARGO
+              value: "true"
+            - name: FARM_AIRFLOW
+              value: "true"
+            - name: FARM_TOPIC_PROJECT_ID
+              value: "prj-estecker"
+            - name: tenant
+              value: "base"
+          image: europe-west4-docker.pkg.dev/prj-estecker/docker-europe-west4/farm
+          imagePullPolicy: IfNotPresent
+          name: farm
+          resources:
+            limits:
+              cpu: "250m"
+              memory: 250Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 13
+      serviceAccountName: farm

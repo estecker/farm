@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: farm
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+  labels:
+    tags.datadoghq.com/service: farm
+    tags.datadoghq.com/version: {{.Chart.AppVersion}}
+spec:
+  replicas: {{ .ValuesreplicaCount }}
+  selector:
+    matchLabels:
+      {{- range $key, $val := .Values.selectorLabels }}
+      {{ $key }}: {{ $val | quote }}
+      {{- end}}
+  template:
+    metadata:
+      labels:
+        tags.datadoghq.com/version: {{.Chart.AppVersion}}
+        tags.datadoghq.com/service: farm
+        {{- range $key, $val := .Values.selectorLabels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end}}
+    spec:
+      containers:
+      - name: main
+        image: "{{ .Values.image.repository }}-{{ .Values.image.branch }}:{{ .Values.image.tag }}"
+
+        env:
+          - name: DD_SERVICE
+            value: {{ .Values.datadogService }}
+          - name: DD_ENV
+            value: {{ .Values.datadogEnvironment }}
+          - name: DD_VERSION
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/version']
+          - name: DD_AGENT_HOST
+            value: datadog.datadog.svc.cluster.local
+          - name: DD_GIT_REPOSITORY_URL
+            value: "github.com/estecker/farm"
+
+          - name: FARM_TOPIC_PROJECT_ID
+            value: prj-estecker
+
+          - name: FARM_ARGO
+            value: {{ .Values.argo.enabled | quote }}
+          {{- if .Values.argo.enabled }}
+          - name: FARM_ARGO_NAMESPACE
+            value: {{ .Values.argo.namespace }}
+          {{- end }}
+
+          - name: FARM_AIRFLOW
+            value: {{ .Values.airflow.enabled | quote }}
+          {{- if .Values.airflow.enabled }}
+          - name: FARM_AIRFLOW_HOST
+            value: {{ .Values.airflow.host }}
+          {{- end }}
+
+        resources:
+        {{- toYaml .Values.resources | nindent 12 }}
+
+      {{- if .Values.serviceAccount.enabled }}
+      {{- with (fromYaml .Values.serviceAccount.names) }}
+      serviceAccountName: {{ .k8s_account }}
+      {{- end }}
+      {{- end }}
